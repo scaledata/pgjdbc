@@ -9,7 +9,7 @@
   <artifactId>pgjdbc-aggregate</artifactId>
   <packaging>pom</packaging>
   <name>PostgreSQL JDBC Driver aggregate</name>
-  <version>42.2.6-SNAPSHOT</version>
+  <version>42.2.5-rubrik</version>
   <description>PgJDBC aggregate project</description>
   <url>https://github.com/pgjdbc/pgjdbc</url>
 
@@ -24,5 +24,13 @@
     <developerConnection>scm:git:git@github.com:pgjdbc/pgjdbc.git</developerConnection>
     <tag>HEAD</tag>
   </scm>
+
+  <distributionManagement>
+    <repository>
+        <id>central</id>
+        <name>repository.rubrik.com-releases</name>
+        <url>https://repository.rubrik.com:443/artifactory/rubrik-maven2-local</url>
+    </repository>
+  </distributionManagement>
 
 </project>
