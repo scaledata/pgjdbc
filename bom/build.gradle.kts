@@ -5,6 +5,7 @@
 
 plugins {
     `java-platform`
+    `maven-publish`
 }
 
 val String.v: String get() = rootProject.extra["$this.version"] as String

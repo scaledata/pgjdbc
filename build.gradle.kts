@@ -36,7 +36,7 @@ plugins {
     id("com.github.vlsi.crlf")
     id("com.github.vlsi.gradle-extensions")
     id("com.github.vlsi.license-gather") apply false
-    id("com.github.vlsi.stage-vote-release")
+    id("com.github.vlsi.stage-vote-release") version "1.90"
 }
 
 fun reportsForHumans() = !(System.getenv()["CI"]?.toBoolean() ?: props.bool("CI"))
@@ -49,6 +49,7 @@ val enableCheckerframework by props()
 val skipCheckstyle by props()
 val skipAutostyle by props()
 val skipJavadoc by props()
+val skipSources by props()
 val skipForbiddenApis by props()
 val enableMavenLocal by props()
 val enableGradleMetadata by props()
@@ -83,7 +84,7 @@ val gitProps by tasks.registering(FindGitAttributes::class) {
 
 val String.v: String get() = rootProject.extra["$this.version"] as String
 
-val buildVersion = "pgjdbc".v + releaseParams.snapshotSuffix
+val buildVersion = "pgjdbc".v + "-rubrik"
 
 println("Building pgjdbc $buildVersion")
 
@@ -722,6 +723,54 @@ subprojects {
                 "osgiCompileOnly"("org.osgi:org.osgi.service.jdbc")
                 "testImplementation"("org.osgi:org.osgi.service.jdbc") {
                     because("DataSourceFactory is needed for PGDataSourceFactoryTest")
+                }
+            }
+        }
+    }
+}
+
+subprojects {
+    plugins.apply(if (project.name == "bom") "java-platform" else "java-library")
+
+    repositories {
+        mavenCentral()
+    }
+
+    plugins.withType<JavaPlugin> {
+        configure<JavaPluginExtension> {
+            if (!skipSources) withSourcesJar()
+            if (!skipJavadoc) withJavadocJar()
+        }
+    }
+
+    plugins.withType<JavaPlatformPlugin> {
+        configure<JavaPlatformExtension> {
+            allowDependencies()
+        }
+    }
+
+    plugins.withType<MavenPublishPlugin> {
+        publishing {
+            publications {
+                create<MavenPublication>("mavenJava") {
+                    from(
+                        if (plugins.hasPlugin("java-platform"))
+                            components["javaPlatform"]
+                        else components["java"]
+                    )
+
+                    artifactId = project.name
+                }
+            }
+
+            repositories {
+                maven {
+                    name = "repository.rubrik.com-releases"
+                    url = uri("https://repository.rubrik.com:443/artifactory/rubrik-maven2-local")
+                    credentials {
+                        username = System.getenv("RUBRIK_MAVEN_USER")
+                        password = System.getenv("RUBRIK_MAVEN_API_KEY")
+                    }
                 }
             }
         }
